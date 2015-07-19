@@ -5,7 +5,7 @@
 #include <linux/workqueue.h>		//for workqueues
 #include <linux/jiffies.h>		//msecs_to_jiffies
 
-MODULE_DESCRIPTION("Using Kernel Shared workqueue");
+MODULE_DESCRIPTION("Creating your own ST workqueue");
 MODULE_AUTHOR("Kashish_Bhatia");
 
 struct node {
@@ -13,6 +13,9 @@ struct node {
 	struct node *next;
 };
 struct node *head,*tail,*temp;
+
+// represents custom workqueue
+struct workqueue_struct *my_wq;
 
 typedef struct my_add_work{
 	struct delayed_work work;
@@ -88,6 +91,7 @@ void call_add(struct work_struct *arg) {
 	//extract the parent structure of delayed work
 	my_add_work_t *added_work = container_of(dwork, my_add_work_t, work);
 	printk(KERN_INFO "data = %d\n", added_work->data);
+	msleep(10000);
 	add_node(added_work->data);
 }
 
@@ -95,7 +99,9 @@ void call_add(struct work_struct *arg) {
  * Callback func to delete node from llist
  */
 void call_delete(struct work_struct *arg) {
-	int ret = delete_node();
+	int ret;
+	msleep(20000);
+	ret = delete_node();
 	if (ret) {
 		printk("List is empty. Unable to delete\n");
 	}
@@ -103,7 +109,14 @@ void call_delete(struct work_struct *arg) {
 
 int __init work_init(void)
 {
-	//Allocate and init data	
+	//create workqueue with 1 worker thread for entire system
+	my_wq = create_singlethread_workqueue("test_workqueue");
+	if (!my_wq) {
+		printk("Failed to create workqueue\n");
+		goto out;
+	}
+
+	//allocate and init data	
 	add_work = kmalloc(sizeof(*add_work), GFP_KERNEL);
 	add_work->data = 10;
 
@@ -116,14 +129,15 @@ int __init work_init(void)
          */
 	INIT_DELAYED_WORK(&(add_work->work), call_add);
 
-	/* Add work to events workqueue(default kernel workqueue)
+	/* Add work to given workqueue
  	 * and will be executed after specified timeout
  	 *
  	 * @args :
+ 	 * struct workqueue_struct *wq
  	 * struct delayed_work *work
  	 * time in jiffies
  	 */
-	schedule_delayed_work(&(add_work->work), msecs_to_jiffies(2000));
+	queue_delayed_work(my_wq, &(add_work->work), msecs_to_jiffies(2000));
 	
 	//cannot delete immediately as data is not added yet		
 	msleep(4000);
@@ -141,16 +155,34 @@ int __init work_init(void)
  	 * as worker thread on current processor wakes up
  	 *
  	 * @args :
+ 	 * struct workqueue_struct *wq
  	 * struct work_struct *work
  	 */
-	schedule_work((struct work_struct *)&(delete_work.work));
-
+	queue_work(my_wq, &(delete_work.work));
+out:
 	return 0;
 }
 
 
 
-void work_exit(void) {
+void work_exit(void)
+{
+	if (delayed_work_pending(&(add_work->work))) {
+		printk("add_work is pending\n");
+		/*
+ 		 * cancel delayed work.
+ 		 * It will only cancel the work if it is not
+ 		 * removed out by worker thread from workqueue.
+ 		 * Means it is yet to be removed and serviced
+ 		 */
+		cancel_delayed_work_sync(&(add_work->work));
+	}
+
+	if (work_pending(&(delete_work.work))) {
+		printk("delete_work is pending\n");
+		//cancel work
+		cancel_work_sync(&(delete_work.work));
+	}
 
 	/* this function will flush workqueue
  	 * but before flushing block the control
@@ -160,21 +192,17 @@ void work_exit(void) {
  	 * we can also use flush_work() API 
  	 * to flush the specific work from
  	 * the queue
+ 	 * destroy_workqueue() will destroy given wq
+ 	 *
  	 */
-	//flush_scheduled_work();
-	/*
- 	 * Lesson : we cannot use destroy_workqueue or flush_scheduled_work
- 	 * during cleanup, as we are inserting the jobs in system workqueue and
- 	 * not in our own workqueue
- 	 * When I used flush_scheduled_work() during cleanup, I got a kernel panic.
-	 * Also flush_scheduled_work() is now deprecated in kernel.
-	 * Read :
-	 * http://www.unix.com/man-page/centos/9/flush_scheduled_work/
-	 * https://www.redhat.com/archives/dm-devel/2010-December/msg00146.html
-	 *
- 	 * Stack trace is attached in ISSUES file
- 	 */
-	kfree(add_work);
+	if (my_wq) {
+		printk("flush wq\n");
+		flush_workqueue(my_wq);
+		//free allocated memory
+		kfree(add_work);
+		printk("destroy wq\n");
+		destroy_workqueue(my_wq);
+	}
 	printk("Exiting from the module\n");
 }
 

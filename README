@@ -1,0 +1,48 @@
+Different types of workqueues in Linux kernel
+=============================================
+
+1) Shared workqueue/Default,Global workqueue in linux
+
+-->APIs
+
+
+
+2) Single threaded workqueue
+
+-->ABOUT ST model
+http://lwn.net/Articles/81119/
+
+-->are allocated with  WQ_UNBOUND | __WQ_ORDERED flags. hence dont create per-cpu worker threads
+http://lxr.free-electrons.com/source/kernel/workqueue.c#L3739
+http://lxr.free-electrons.com/source/include/linux/workqueue.h#L418
+
+
+-->APIs
+
+3) Multithreaded workqueue
+
+--> func which creates per-cpu workers in multithreaded workqueue
+http://lxr.free-electrons.com/source/kernel/workqueue.c#L3716
+
+-->APIs
+
+4) Concurrency managed workqueue
+-->APIs
+
+
+Important links :
+==============
+http://www.ibm.com/developerworks/library/l-tasklets/
+http://www.crashcourse.ca/wiki/index.php/Work_queues
+
+==> to_delayed_work() implementation
+http://lxr.free-electrons.com/source/include/linux/workqueue.h#L136
+
+==> flush_scheduled_work() is deprecated
+https://www.redhat.com/archives/dm-devel/2010-December/msg00146.html
+http://lxr.free-electrons.com/source/kernel/workqueue.c#L2973
+http://www.unix.com/man-page/centos/9/flush_scheduled_work/
+
+==>delayed works
+https://lwn.net/Articles/211279/
+

@@ -1,0 +1,174 @@
+When used flush_scheduled_work() during rmmod
+=============================================
+BUG: sleeping function called from invalid context at arch/x86/mm/fault.c:1072
+in_atomic(): 0, irqs_disabled(): 1, pid: 2280, name: bash
+Pid: 2280, comm: bash Not tainted 2.6.33.3-85.fc13.i686.PAE #1
+Call Trace:
+ [<c042f827>] __might_sleep+0xc5/0xcc
+ [<c078503b>] do_page_fault+0x1b4/0x2fa
+ [<c0784e87>] ? do_page_fault+0x0/0x2fa
+ [<c07832df>] error_code+0x73/0x78
+ [<c04c86f7>] ? kmem_cache_alloc_notrace+0x78/0xa2
+ [<c05798d1>] ? ebitmap_cpy+0x38/0xc8
+ [<c05798d1>] ebitmap_cpy+0x38/0xc8
+ [<c0580e4e>] mls_context_cpy+0x42/0x5d
+ [<c0580f64>] mls_compute_sid+0x9a/0xab
+ [<c057f1dc>] security_compute_sid+0x1a6/0x29b
+ [<c057f31f>] security_transition_sid+0x12/0x14
+ [<c057560c>] selinux_bprm_set_creds+0xbb/0x215
+ [<c04b7f0b>] ? __vma_link+0x5e/0x67
+ [<c04b7f6d>] ? vma_link+0x59/0x78
+ [<c04b8046>] ? insert_vm_struct+0xba/0xcd
+ [<c056bd92>] security_bprm_set_creds+0xc/0xe
+ [<c04d55c8>] prepare_binprm+0xa8/0xdb
+ [<c04d5d65>] do_execve+0x120/0x277
+ [<c040e213>] sys_execve+0x2c/0x4f
+ [<c040892e>] ptregs_execve+0x12/0x18
+ [<c040885f>] ? sysenter_do_call+0x12/0x28
+BUG: unable to handle kernel paging request at 00002727
+IP: [<c04c86f7>] kmem_cache_alloc_notrace+0x78/0xa2
+*pdpt = 0000000031e68001 *pde = 0000000030157067 *pte = 0000000000000000 
+Oops: 0000 [#1] SMP 
+last sysfs file: /sys/devices/pci0000:00/0000:00:07.2/usb2/devnum
+Modules linked in: workqueue fuse sunrpc be2iscsi bnx2i cnic uio cxgb3i cxgb3 mdio ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr ipv6 iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi uinput snd_ens1371 gameport snd_rawmidi snd_ac97_codec ac97_bus snd_seq snd_seq_device snd_pcm ppdev parport_pc snd_timer microcode parport snd i2c_piix4 pcnet32 soundcore mii snd_page_alloc i2c_core mptspi mptscsih mptbase scsi_transport_spi [last unloaded: scsi_wait_scan]
+
+Pid: 2280, comm: bash Not tainted 2.6.33.3-85.fc13.i686.PAE #1 440BX Desktop Reference Platform/VMware Virtual Platform
+EIP: 0060:[<c04c86f7>] EFLAGS: 00010006 CPU: 0
+EIP is at kmem_cache_alloc_notrace+0x78/0xa2
+EAX: c2005ec4 EBX: 00002727 ECX: 00000000 EDX: 00000000
+ESI: 00008020 EDI: c09740d4 EBP: f1e35de0 ESP: f1e35dc8
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process bash (pid: 2280, ti=f1e34000 task=f00b0cc0 task.ti=f1e34000)
+Stack:
+ c05798d1 00000020 00000246 c2009540 f4685f3c c200955c f1e35e04 c05798d1
+<0> f4688224 c2009540 f1e35e70 f4685f40 f1e35e50 f4688204 f1e35e64 f1e35e1c
+<0> c0580e4e f1e35e28 00000000 f4688204 f1e35e50 f1e35e34 c0580f64 00000002
+Call Trace:
+ [<c05798d1>] ? ebitmap_cpy+0x38/0xc8
+ [<c05798d1>] ? ebitmap_cpy+0x38/0xc8
+ [<c0580e4e>] ? mls_context_cpy+0x42/0x5d
+ [<c0580f64>] ? mls_compute_sid+0x9a/0xab
+ [<c057f1dc>] ? security_compute_sid+0x1a6/0x29b
+ [<c057f31f>] ? security_transition_sid+0x12/0x14
+ [<c057560c>] ? selinux_bprm_set_creds+0xbb/0x215
+ [<c04b7f0b>] ? __vma_link+0x5e/0x67
+ [<c04b7f6d>] ? vma_link+0x59/0x78
+ [<c04b8046>] ? insert_vm_struct+0xba/0xcd
+ [<c056bd92>] ? security_bprm_set_creds+0xc/0xe
+ [<c04d55c8>] ? prepare_binprm+0xa8/0xdb
+ [<c04d5d65>] ? do_execve+0x120/0x277
+ [<c040e213>] ? sys_execve+0x2c/0x4f
+ [<c040892e>] ? ptregs_execve+0x12/0x18
+ [<c040885f>] ? sysenter_do_call+0x12/0x28
+Code: 84 87 84 00 00 00 8b 50 10 89 55 ec 8b 18 85 db 75 16 50 83 c9 ff ff 75 e8 89 f2 89 f8 e8 f7 f7 ff ff 5a 59 89 c3 eb 08 8b 50 0c <8b> 14 93 89 10 8b 45 f0 50 9d 8d 74 26 00 85 db 74 0e 66 85 f6 
+EIP: [<c04c86f7>] kmem_cache_alloc_notrace+0x78/0xa2 SS:ESP 0068:f1e35dc8
+CR2: 0000000000002727
+---[ end trace 1a50f026994c8687 ]---
+BUG: unable to handle kernel NULL pointer dereference at 00000250
+IP: [<c044fdbf>] delayed_work_timer_fn+0x14/0x2f
+*pdpt = 0000000031e68001 *pde = 0000000030157067 *pte = 0000000000000000 
+Oops: 0000 [#2] SMP 
+last sysfs file: /sys/devices/pci0000:00/0000:00:07.2/usb2/devnum
+Modules linked in: workqueue fuse sunrpc be2iscsi bnx2i cnic uio cxgb3i cxgb3 mdio ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr ipv6 iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi uinput snd_ens1371 gameport snd_rawmidi snd_ac97_codec ac97_bus snd_seq snd_seq_device snd_pcm ppdev parport_pc snd_timer microcode parport snd i2c_piix4 pcnet32 soundcore mii snd_page_alloc i2c_core mptspi mptscsih mptbase scsi_transport_spi [last unloaded: scsi_wait_scan]
+
+Pid: 2280, comm: bash Tainted: G      D    2.6.33.3-85.fc13.i686.PAE #1 440BX Desktop Reference Platform/VMware Virtual Platform
+EIP: 0060:[<c044fdbf>] EFLAGS: 00010282 CPU: 0
+EIP is at delayed_work_timer_fn+0x14/0x2f
+EAX: 00000240 EBX: c2005e38 ECX: 00000000 EDX: c2005e28
+ESI: c0a8f440 EDI: c2005e28 EBP: f1e35bd0 ESP: f1e35bd0
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process bash (pid: 2280, ti=f1e34000 task=f00b0cc0 task.ti=f1e34000)
+Stack:
+ f1e35c0c c04486d1 f1e35bf8 00000170 c0a90250 c0a90050 c0a8fe50 c0a8fc50
+<0> 00000100 c044fdab f1e35bf8 f1e35bf8 00000004 c2003634 00000001 f1e35c38
+<0> c0442a01 00000000 c0a476a0 c094ba04 0000000a 00000100 00000101 00000046
+Call Trace:
+ [<c04486d1>] ? run_timer_softirq+0x163/0x1e6
+ [<c044fdab>] ? delayed_work_timer_fn+0x0/0x2f
+ [<c0442a01>] ? __do_softirq+0xac/0x152
+ [<c0442ad8>] ? do_softirq+0x31/0x3c
+ [<c0442bec>] ? irq_exit+0x29/0x5c
+ [<c041d687>] ? smp_apic_timer_interrupt+0x6f/0x7d
+ [<c078306d>] ? apic_timer_interrupt+0x31/0x38
+ [<c046bfaa>] ? acct_collect+0x12b/0x135
+ [<c0440936>] ? do_exit+0x193/0x615
+ [<c043e2ad>] ? kmsg_dump+0xee/0x103
+ [<c0783c97>] ? oops_end+0x99/0xa1
+ [<c04261c1>] ? no_context+0x13e/0x148
+ [<c0780a4a>] ? dump_stack+0x57/0x61
+ [<c04262b7>] ? __bad_area_nosemaphore+0xec/0xf4
+ [<c0426304>] ? bad_area+0x35/0x3b
+ [<c0785085>] ? do_page_fault+0x1fe/0x2fa
+ [<c0784e87>] ? do_page_fault+0x0/0x2fa
+ [<c07832df>] ? error_code+0x73/0x78
+ [<c04c86f7>] ? kmem_cache_alloc_notrace+0x78/0xa2
+ [<c05798d1>] ? ebitmap_cpy+0x38/0xc8
+ [<c05798d1>] ? ebitmap_cpy+0x38/0xc8
+ [<c0580e4e>] ? mls_context_cpy+0x42/0x5d
+ [<c0580f64>] ? mls_compute_sid+0x9a/0xab
+ [<c057f1dc>] ? security_compute_sid+0x1a6/0x29b
+ [<c057f31f>] ? security_transition_sid+0x12/0x14
+ [<c057560c>] ? selinux_bprm_set_creds+0xbb/0x215
+ [<c04b7f0b>] ? __vma_link+0x5e/0x67
+ [<c04b7f6d>] ? vma_link+0x59/0x78
+ [<c04b8046>] ? insert_vm_struct+0xba/0xcd
+ [<c056bd92>] ? security_bprm_set_creds+0xc/0xe
+ [<c04d55c8>] ? prepare_binprm+0xa8/0xdb
+ [<c04d5d65>] ? do_execve+0x120/0x277
+ [<c040e213>] ? sys_execve+0x2c/0x4f
+ [<c040892e>] ? ptregs_execve+0x12/0x18
+ [<c040885f>] ? sysenter_do_call+0x12/0x28
+Code: 89 c6 89 d8 e8 c5 fd ff ff 89 f2 89 d8 e8 90 2a 33 00 5a 5b 5e 5d c3 55 8b 08 89 c2 89 e5 83 e1 fc 8b 41 1c 64 8b 0d 2c 66 a4 c0 <83> 78 10 00 0f 45 0d e4 18 9d c0 8b 00 03 04 8d b0 16 9d c0 e8 
+EIP: [<c044fdbf>] delayed_work_timer_fn+0x14/0x2f SS:ESP 0068:f1e35bd0
+CR2: 0000000000000250
+---[ end trace 1a50f026994c8688 ]---
+Kernel panic - not syncing: Fatal exception in interrupt
+Pid: 2280, comm: bash Tainted: G      D    2.6.33.3-85.fc13.i686.PAE #1
+Call Trace:
+ [<c0780b4f>] ? printk+0xf/0x18
+ [<c0780a8d>] panic+0x39/0xec
+ [<c0783c90>] oops_end+0x92/0xa1
+ [<c04261c1>] no_context+0x13e/0x148
+ [<c04262b7>] __bad_area_nosemaphore+0xec/0xf4
+ [<c0784e87>] ? do_page_fault+0x0/0x2fa
+ [<c04262cc>] bad_area_nosemaphore+0xd/0x10
+ [<c078501b>] do_page_fault+0x194/0x2fa
+ [<c0784e87>] ? do_page_fault+0x0/0x2fa
+ [<c07832df>] error_code+0x73/0x78
+ [<c044007b>] ? wait_consider_task+0x746/0xab2
+ [<c044fdbf>] ? delayed_work_timer_fn+0x14/0x2f
+ [<c04486d1>] run_timer_softirq+0x163/0x1e6
+ [<c044fdab>] ? delayed_work_timer_fn+0x0/0x2f
+ [<c0442a01>] __do_softirq+0xac/0x152
+ [<c0442ad8>] do_softirq+0x31/0x3c
+ [<c0442bec>] irq_exit+0x29/0x5c
+ [<c041d687>] smp_apic_timer_interrupt+0x6f/0x7d
+ [<c078306d>] apic_timer_interrupt+0x31/0x38
+ [<c046bfaa>] ? acct_collect+0x12b/0x135
+ [<c0440936>] do_exit+0x193/0x615
+ [<c043e2ad>] ? kmsg_dump+0xee/0x103
+ [<c0783c97>] oops_end+0x99/0xa1
+ [<c04261c1>] no_context+0x13e/0x148
+ [<c0780a4a>] ? dump_stack+0x57/0x61
+ [<c04262b7>] __bad_area_nosemaphore+0xec/0xf4
+ [<c0426304>] bad_area+0x35/0x3b
+ [<c0785085>] do_page_fault+0x1fe/0x2fa
+ [<c0784e87>] ? do_page_fault+0x0/0x2fa
+ [<c07832df>] error_code+0x73/0x78
+ [<c04c86f7>] ? kmem_cache_alloc_notrace+0x78/0xa2
+ [<c05798d1>] ? ebitmap_cpy+0x38/0xc8
+ [<c05798d1>] ebitmap_cpy+0x38/0xc8
+ [<c0580e4e>] mls_context_cpy+0x42/0x5d
+ [<c0580f64>] mls_compute_sid+0x9a/0xab
+ [<c057f1dc>] security_compute_sid+0x1a6/0x29b
+ [<c057f31f>] security_transition_sid+0x12/0x14
+ [<c057560c>] selinux_bprm_set_creds+0xbb/0x215
+ [<c04b7f0b>] ? __vma_link+0x5e/0x67
+ [<c04b7f6d>] ? vma_link+0x59/0x78
+ [<c04b8046>] ? insert_vm_struct+0xba/0xcd
+ [<c056bd92>] security_bprm_set_creds+0xc/0xe
+ [<c04d55c8>] prepare_binprm+0xa8/0xdb
+ [<c04d5d65>] do_execve+0x120/0x277
+ [<c040e213>] sys_execve+0x2c/0x4f
+ [<c040892e>] ptregs_execve+0x12/0x18
+ [<c040885f>] ? sysenter_do_call+0x12/0x28
