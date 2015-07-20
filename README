@@ -7,7 +7,7 @@ Different types of workqueues in Linux kernel
 
 
 
-2) Single threaded workqueue
+2) Single threaded workqueue (ST)
 
 -->ABOUT ST model
 http://lwn.net/Articles/81119/
@@ -17,18 +17,31 @@ http://lxr.free-electrons.com/source/kernel/workqueue.c#L3739
 http://lxr.free-electrons.com/source/include/linux/workqueue.h#L418
 
 
--->APIs
 
-3) Multithreaded workqueue
+3) Multithreaded workqueue (MT)
 
 --> func which creates per-cpu workers in multithreaded workqueue
 http://lxr.free-electrons.com/source/kernel/workqueue.c#L3716
 
--->APIs
 
-4) Concurrency managed workqueue
--->APIs
 
+4) Concurrency managed workqueue (CM)
+https://lwn.net/Articles/403891/
+http://lwn.net/Articles/355700/
+http://lwn.net/Articles/393171/
+https://lwn.net/Articles/393172/
+https://www.kernel.org/doc/Documentation/workqueue.txt
+
+-->APIs
+alloc_workqueue()
+
+-->APIs common for ST ,MT and CM workqueue
+flush_workqueue()
+destroy_workqueue()
+queue_delayed_work_on()
+queue_work_on()   
+queue_delayed_work()
+queue_work()
 
 Important links :
 ==============
@@ -46,3 +59,12 @@ http://www.unix.com/man-page/centos/9/flush_scheduled_work/
 ==>delayed works
 https://lwn.net/Articles/211279/
 
+
+Generic API list
+================
+mod_delayed_work()
+delayed_work_pending()
+to_delayed_work()
+work_pending()
+cancel_delayed_work_sync()
+cancel_work_sync()
